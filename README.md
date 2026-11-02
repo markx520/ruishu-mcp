@@ -150,9 +150,28 @@ chrome.exe --remote-debugging-port=9222
 <br>
 
 <p align="center">
-  <img src="wechat.jpg" alt="WeChat / 微信技术交流" width="300">
+  <img src="wechat.jpg" alt="WeChat / 微信技术交流" width="260">
   <br>
   <b>微信号 / WeChat ID: <code>Sleep_Plan</code></b>
+</p>
+
+<br>
+
+---
+
+## 💖 赞助与支持 / Sponsor & Support
+
+如果本项目对您的学术研究、工程实践或商业探索有所启发与帮助，欢迎请作者喝杯咖啡，支持持续的底层技术研究与协议栈维护！
+*If this project has helped or inspired your academic research, engineering practice, or commercial exploration, consider buying the author a coffee to support continuous low-level protocol research and maintenance!*
+
+<br>
+
+<p align="center">
+  <img src="alipay_sponsor.png" alt="支付宝赞助 / Alipay" width="240">
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="wechat_sponsor.png" alt="微信赞助 / WeChat Pay" width="240">
+  <br>
+  <b>支付宝 (Alipay) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 微信支付 (WeChat Pay)</b>
 </p>
 
 <br>

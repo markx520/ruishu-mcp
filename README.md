@@ -1,20 +1,20 @@
 # Ruishu MCP: Bridging the Gap between LLMs and Dynamic Real-World Data
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/xuange520/ruishu-mcp)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/markx520/ruishu-mcp)
 [![Anthropic MCP](https://img.shields.io/badge/Anthropic-MCP%20Compliant-blueviolet.svg)](https://modelcontextprotocol.io)
 
 > **💼 商业合作与技术支持 / Commercial Collaboration & Support**
 > 
 > 本开源版本仅展示项目的核心架构与基础通联能力。在真实的复杂动态网络环境中，要实现**高并发**、**高可用**且**长期稳定**的数据提取，需要大量的底层调优与对抗策略维护。
 > 
-> 我们为您提供开箱即用的**企业级定制方案**。如果您有明确的商业数据采集需求、需要构建稳定的企业级数据管道，或需要深度的**付费技术咨询与定制化开发**，非常欢迎与我联系探讨商务合作（添加好友时请务必备注：**商业合作** 或 **付费咨询**，并附带简单需求）。
+> 我们为您提供开箱即用的**企业级定制方案**。如果您有明确的商业数据采集需求、需要构建稳定的企业级数据管道，或需要深度的**付费技术咨询与定制化开发**，非常欢迎添加微信（**`Sleep_Plan`**）与我联系探讨商务合作（添加好友时请务必备注：**商业合作** 或 **付费咨询**，并附带简单需求）。
 > 
 > *注：技术有价，精力有限。为了把最高效的服务提供给商业客户，本人暂不提供免费的个人基础答疑、环境配置指导和无偿技术支持。感谢各位老板的理解与尊重！*
 >
 > *This open-source repository demonstrates our core architectural capabilities. Achieving **high concurrency, high availability, and long-term stability** in real-world complex dynamic environments requires significant low-level tuning and continuous strategy maintenance.*
 > 
-> *We offer out-of-the-box **enterprise-grade custom solutions**. If you have clear commercial data integration needs, require a robust enterprise data pipeline, or need **paid in-depth technical support and custom development**, we warmly welcome commercial inquiries (Please include "**Commercial Project**" or "**Paid Consulting**" with a brief summary of your needs when reaching out).* 
+> *We offer out-of-the-box **enterprise-grade custom solutions**. If you have clear commercial data integration needs, require a robust enterprise data pipeline, or need **paid in-depth technical support and custom development**, we warmly welcome commercial inquiries via WeChat (**`Sleep_Plan`**, please include "**Commercial Project**" or "**Paid Consulting**" with a brief summary of your needs when reaching out).* 
 > 
 > *Note: Technical expertise has value, and bandwidth is limited. To ensure the highest quality of service for our commercial clients, free troubleshooting, environment setup guidance, and unpaid support are not provided. Thank you for respecting our time and expertise!*
 
@@ -53,7 +53,7 @@
 
 ```bash
 # 1. 克隆代码库 / Clone the repository
-git clone https://github.com/xuange520/ruishu-mcp.git
+git clone https://github.com/markx520/ruishu-mcp.git
 cd ruishu-mcp
 
 # 2. 安装依赖 / Install dependencies
@@ -144,13 +144,15 @@ chrome.exe --remote-debugging-port=9222
 
 ## 💬 学术研讨与交流 / Contact & Communication
 
-欢迎添加作者微信，进入底层网络协议分析与大模型 AI Agent 自动化技术的专属研讨群进行深度学术交流。
-*Welcome to add the author's WeChat to join the exclusive discussion group focusing on underlying network protocol analysis and LLM AI Agent automation technologies for deep academic exchange.*
+欢迎添加作者微信（微信号：`Sleep_Plan`），进入底层网络协议分析与大模型 AI Agent 自动化技术的专属研讨群进行深度学术交流。
+*Welcome to add the author's WeChat (WeChat ID: `Sleep_Plan`) to join the exclusive discussion group focusing on underlying network protocol analysis and LLM AI Agent automation technologies for deep academic exchange.*
 
 <br>
 
 <p align="center">
   <img src="wechat.jpg" alt="WeChat / 微信技术交流" width="300">
+  <br>
+  <b>微信号 / WeChat ID: <code>Sleep_Plan</code></b>
 </p>
 
 <br>
@@ -168,7 +170,7 @@ chrome.exe --remote-debugging-port=9222
 
 ## © 版权说明 / Copyright
 
-Copyright (c) 2026 xuange520. All rights reserved.
+Copyright (c) 2026 markx520. All rights reserved.
 
 本项目源代码及相关文档已受相应保护。除学术研究范围内的开源代码交流及算法研讨外，未经作者明确书面许可，严禁将本项目架构或源代码直接用于任何形式的商业变现、闭源代码封装二次售卖，或进行不符合学术规约的无署名分发。
 *The source code and related documentation of this project are protected. Except for open-source code communication and algorithmic discussion within the scope of academic research, without explicit written permission from the author, any form of commercial monetization, closed-source packaging for secondary sale, or unsigned distribution violating academic conventions is strictly prohibited.*

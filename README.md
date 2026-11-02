@@ -1,195 +1,135 @@
-# Ruishu MCP: Bridging the Gap between LLMs and Dynamic Real-World Data
+# 瑞数 MCP (Ruishu MCP)：让 AI 轻松看懂并抓取瑞数高防网站数据
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/markx520/ruishu-mcp)
 [![Anthropic MCP](https://img.shields.io/badge/Anthropic-MCP%20Compliant-blueviolet.svg)](https://modelcontextprotocol.io)
 
-> **💼 商业合作与技术支持 / Commercial Collaboration & Support**
+> 💼 **商业合作与定制开发**
 > 
-> 本开源版本仅展示项目的核心架构与基础通联能力。在真实的复杂动态网络环境中，要实现**高并发**、**高可用**且**长期稳定**的数据提取，需要大量的底层调优与对抗策略维护。
+> 本开源项目用于展示基础架构与通联能力。在企业实际业务中，面对复杂多变的瑞数防护，要想做到**高并发、超稳定、不封号**的批量数据提取，需要大量的底层调优和持续对抗策略。
 > 
-> 我们为您提供开箱即用的**企业级定制方案**。如果您有明确的商业数据采集需求、需要构建稳定的企业级数据管道，或需要深度的**付费技术咨询与定制化开发**，非常欢迎添加微信（**`Sleep_Plan`**）与我联系探讨商务合作（添加好友时请务必备注：**商业合作** 或 **付费咨询**，并附带简单需求）。
+> 我们提供现成开箱即用的**企业级商业方案**。如果您有明确的商业采数需求，或需要深度的**付费咨询与定制开发**，欢迎添加微信：**`Sleep_Plan`** 探讨商务合作（添加好友请备注：**商业合作** 或 **付费咨询**，并附带简要需求）。
 > 
-> *注：技术有价，精力有限。为了把最高效的服务提供给商业客户，本人暂不提供免费的个人基础答疑、环境配置指导和无偿技术支持。感谢各位老板的理解与尊重！*
->
-> *This open-source repository demonstrates our core architectural capabilities. Achieving **high concurrency, high availability, and long-term stability** in real-world complex dynamic environments requires significant low-level tuning and continuous strategy maintenance.*
-> 
-> *We offer out-of-the-box **enterprise-grade custom solutions**. If you have clear commercial data integration needs, require a robust enterprise data pipeline, or need **paid in-depth technical support and custom development**, we warmly welcome commercial inquiries via WeChat (**`Sleep_Plan`**, please include "**Commercial Project**" or "**Paid Consulting**" with a brief summary of your needs when reaching out).* 
-> 
-> *Note: Technical expertise has value, and bandwidth is limited. To ensure the highest quality of service for our commercial clients, free troubleshooting, environment setup guidance, and unpaid support are not provided. Thank you for respecting our time and expertise!*
+> *（注：技术有价，精力有限。为了高效服务商业客户，暂不提供免费答疑与基础教学，感谢各位老板理解！）*
 
 ---
 
-## 📖 简介 / Introduction
+## 💡 这是个什么工具？（一句话搞懂）
 
-**Ruishu MCP** 是一个基于 **Anthropic 官方 Model Context Protocol (MCP) 标准协议** 和 Chrome DevTools Protocol (CDP) 构建的高级环境感知与数据管道工具。在真实的 AI 应用中，大语言模型（LLM）面临的最大瓶颈是如何从具有复杂动态防护的网络环境中稳定提取高质量数据。本项目的核心愿景正是**连接大模型与动态真实世界数据之间的鸿沟 (Bridging the gap between LLMs and dynamic real-world data)**。它能够协助 AI Agent 自动剥离极具挑战性的「动态环境参数」，稳定构建通往高质量业务数据的双向提取链路。
+简单来说，这就是**给你的 AI 助手（比如 Cursor、Claude、AI 智能体）装上了一副“透视眼镜”**。
 
-***Ruishu MCP** is an advanced environment perception and data pipeline tool built upon the **Anthropic Model Context Protocol (MCP)** and the Chrome DevTools Protocol (CDP). In real-world AI applications, the biggest bottleneck for Large Language Models (LLMs) is how to stably extract high-quality data from web environments with complex dynamic security mechanisms. The core vision of this project is to **bridge the gap between LLMs and dynamic real-world data**. It assists AI Agents in automatically stripping away challenging "dynamic environment parameters" and creating a robust, bidirectional extraction pipeline to high-quality business data.*
+很多网站（例如政务、税务、企业查询平台）都装了著名的“瑞数安全防护系统”。普通爬虫或者 AI 一访问就会被识别拦截，拿到的也全都是加密乱码。
 
-### ✨ 核心特性 / Core Features
-
-- **底层协议管道 (Deep Protocol Pipeline)**：隔离大部分前端环境检测机制，直接在浏览器底层建立通信协议遥测，确保数据提取的绝对原始性与完整性。
-  *Isolates from most frontend environment detection mechanisms, establishing protocol telemetry directly at the browser's lowest layer to ensure the absolute originality and integrity of data extraction.*
-- **跨层数据重构 (Cross-layer Data Reconstruction)**：智能桥接 XMLHttpRequest 与 Fetch API，精准捕捉复杂动态逻辑处理后的**第一手规整明文核心数据**。
-  *Intelligently bridges XMLHttpRequest and Fetch APIs to accurately capture the **first-hand normalized core plaintext data** immediately after complex dynamic logic processing.*
-- **动态冗余洗涤 (Dynamic Redundancy Purification)**：通过智能算法模型，自动洗涤并剔除结构化冗余参数 (如 `?abcde123=xxxxxxxxxxxx`)，极大提高大模型数据 ingested 的信噪比。
-  *Automatically washes and strips structured redundant parameters using intelligent algorithms, maximizing the signal-to-noise ratio for LLM data ingestion.*
-- **全域异步拓扑感知 (Global Async Topology Sensing)**：支持监控跨多 Tab 页及复杂微前端架构（异步生成的 Iframe）内部的数据流动状态。
-  *Supports monitoring the data flow states across multiple tabs and complex micro-frontend architectures (asynchronously generated Iframes).*
-- **高可用工程验证 (Production-grade Engineering)**：为了证明极致的学术落地能力，本系统已在 5+ 个存在复杂异构环境的真实生态中通过了严格并发验证，系统可用性与容错性完美达到生产级标准。
-  *To strictly prove academic landing capability, this system has passed rigorous concurrent verification in 5+ real-world ecosystems with complex heterogeneous environments. Its availability and fault tolerance meet production-grade standards flawlessly.*
-- **无缝对接多元 AI 生态 (Seamless LLM Ecosystem Integration)**：严格遵循 Anthropic MCP 标准，极大降低大模型与现实世界交互的系统工程壁垒。支持包括但不限于 **Cursor, Windsurf, Claude Desktop, Gemini CLI, Antigravity** 等全线 AI 应用级客户端直接接入。
-  *Strictly complies with the Anthropic MCP standard, vastly lowering the systematic engineering barrier for LLMs to interact with the real world. Supports direct integration with a full lineup of AI application clients, including **Cursor, Windsurf, Claude Desktop, Gemini CLI, and Antigravity**.*
+这个工具基于官方的 **MCP 协议**，通过直接控制真实浏览器，在网页刚把真实数据解密出来的那一瞬间，顺手把**干干净净的原始数据**直接送给你的 AI 分析，从此再也不怕瑞数动态加密拦截！
 
 ---
 
-## 🛠️ 安装与编译 / Installation & Build
+## 🌟 核心亮点
 
-### 环境要求 / Prerequisites
-- [Node.js](https://nodejs.org/) >= 18
-- Chrome 浏览器 (需启用节点遥测管控端口运行) / *Chrome Browser (Requires running with node telemetry control port)*
+- **直接拿明文数据**：不用苦哈哈去逆向分析几万行混淆乱码 JS，网页一解密，数据直接进你的手。
+- **自动洗掉垃圾参数**：把网址后面长串的加密小尾巴（像 `?abcde123=xxxx`）通通自动清理掉，留给 AI 最干净的数据。
+- **让 AI 像真人一样操作**：支持让大模型自动在网页上点击、翻页、触发查询，全自动流水线作业。
+- **所有主流 AI 软件直接用**：完全符合 MCP 标准，不管是 Cursor、Windsurf、Claude 桌面端还是各类 AI Agent，配好就能直接调用。
 
-### 编译步骤 / Build Steps
+---
+
+## 🚀 极速上手（只需 3 步）
+
+### 第一步：打开浏览器调试端口
+
+在电脑终端运行一行命令打开 Chrome 浏览器（需先退出当前已运行的 Chrome）：
+
+**Windows 用户：**
+```cmd
+chrome.exe --remote-debugging-port=9222
+```
+
+**Mac 用户：**
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+```
+
+---
+
+### 第二步：下载与编译项目
 
 ```bash
-# 1. 克隆代码库 / Clone the repository
+# 1. 下载代码
 git clone https://github.com/markx520/ruishu-mcp.git
 cd ruishu-mcp
 
-# 2. 安装依赖 / Install dependencies
+# 2. 安装依赖并编译
 npm install
-
-# 3. 编译 TypeScript / Build TypeScript 
 npm run build
 ```
 
 ---
 
-## 🚀 启动与配置 / Usage
+### 第三步：挂载到你的 AI 软件
 
-### 第一步：启动异构数据节点 (开启遥测端口) / Step 1: Launch Heterogeneous Data Node (with telemetry port)
-
-你需要先让目标环境浏览器开放 CDP 数据遥测端口（默认推荐 `9222`）。
-*You need to open the CDP data telemetry port on your target environment browser (default `9222` is recommended).*
-
-**Windows:**
-```cmd
-chrome.exe --remote-debugging-port=9222
-```
-
-**macOS:**
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
-```
-
-### 第二步：将管道中继挂载为 MCP Server / Step 2: Attach pipeline relay as an MCP Server
-
-在你的主流 AI 客户端（如 **Claude Desktop, Cursor, Windsurf, Gemini CLI, Antigravity** 等）的 MCP 配置文件中添加当前服务：
-*Add the current MCP service to the MCP configuration file of your mainstream AI client:*
+打开你的 AI 工具（例如 Claude 桌面版、Cursor、Windsurf 等）的 MCP 配置文件，填入下面这段配置：
 
 ```json
 {
   "mcpServers": {
     "ruishu-cdp": {
       "command": "node",
-      "args": ["/absolute/path/to/ruishu-mcp/dist/index.js"]
+      "args": ["/替换成你的实际路径/ruishu-mcp/dist/index.js"]
     }
   }
 }
 ```
 
-### 第三步：大模型感知体系调用 / Step 3: LLM Perception System Invocation
-
-一旦配置成功，大语言模型将获得感知动态数据流以下三大核心能力（Tools）：
-*Once configured, the Large Language Model will gain the following three core capabilities for dynamic data stream perception:*
-
-1. **`init_ruishu_hook`**: 指挥系统级探针锁定目标空间，自动执行前端复杂环境解耦与无侵入数据管道挂载，进入就绪态监控等待环境标定。
-   *Commands the system-level probe to lock onto the target space, automatically executing frontend complex environment decoupling and non-invasive data pipeline mounting, entering a ready-state monitor to await environment calibration.*
-   - **可选参数 / Optional Parameters**: 
-     - `url_keyword`: 目标数据流环境路由特征 / *Target data stream environment routing feature*
-     - `host`: 远端节点 IP / *Remote node IP*, 默认 / *Default* `127.0.0.1`
-     - `port`: 远端节点遥测端口 / *Remote node telemetry port*, 默认 / *Default* `9222`
-2. **`execute_page_action`**: 模型的自动化环境控制层（Action Layer），通过模拟现实操作验证状态机转化，用于激活被动的数据流运转。
-   *The model's automated environment control layer (Action Layer), used to activate passive data stream operations by simulating real-world operations to verify state machine transitions.*
-   - **必填参数 / Required Parameters**: 
-     - `js_script`: 要分发执行的控制流脚本 / *Control flow script to be dispatched and executed*
-3. **`get_intercepted_traffic`**: 结果汇聚观测层（Observation Layer），读取已完成底层预处理、降噪与结构化映射后的高质量业务态 JSON 日志数据集。
-   *The pooled result observation layer (Observation Layer), retrieving high-quality business-state JSON log datasets that have completed underlying preprocessing, noise reduction, and structural mapping.*
-   - **可选参数 / Optional Parameters**: 
-     - `limit`: 控制大模型上下文窗口承载上限以防数据洪流溢出 / *Control the limit of LLM context window bearing capability to prevent data flood overflow*
+配置好后，你在对话框里让 AI 助手：“**帮我提取刚才打开网页的数据**”，AI 就会自动调用工具，把数据原原本本交给你！
 
 ---
 
-## 🧠 数据流转架构设计 / Data Pipeline Architecture
+## 🛠️ AI 能用到的 3 个核心工具
+
+配置好后，AI 助手会自动拥有以下 3 个标准能力：
+
+1. **`init_ruishu_hook`（初始化监控与探针注入）**：指定目标网站的 URL 规则，自动向浏览器环境注入数据监听探针，进入就绪监听状态。
+2. **`execute_page_action`（执行页面动作与交互控制）**：驱动页面执行指定的自动化操作（如模拟点击、表单提交、翻页等），触发目标业务数据的主动流转。
+3. **`get_intercepted_traffic`（获取结构化拦截数据）**：拉取已经过解密还原、参数清洗后的规整业务 JSON 数据集，直接供大模型分析处理。
+
+---
+
+## 💬 技术交流与讨论
+
+欢迎对大模型应用、浏览器底层协议与自动化感兴趣的技术朋友交流：
 
 <br>
 
 <p align="center">
-  <img src="architecture_diagram_cn.png" alt="系统全景架构图 / System Architecture Diagram" width="100%">
-</p>
-
-<br>
-
-1. **CDP Telemetry Layer (协议层遥测探测框架)**
-   系统通过深度利用 `Network.requestWillBeSent` 和 `Network.responseReceived` 在内核级监听底层字节流交互，解决前端逻辑动态加密造成的高维物理黑盒问题。它彻底展现了我对于现代浏览器内核通讯协议极深的工程驾驭能力。
-   *The system listens to the underlying byte stream interactions at the kernel level via `Network.requestWillBeSent` and `Network.responseReceived`, resolving the high-dimensional physical black-box problem caused by frontend dynamic encryption logic.*
-2. **Data Reconstruction Engine (时空数据重构引擎)**
-   通过深度理解浏览器执行期环境架构，桥接底层 JavaScript 原生的生命周期核心对象，在数据流脱离本地被混淆的纳秒级切片内实现数据的高保真还原归档。
-   *By deeply understanding the browser runtime architecture and bridging low-level native JavaScript lifecycle core objects, it implements high-fidelity data restoration and archiving within the nanosecond-level slice before the data stream leaves locally to be obfuscated.*
-3. **Atomic Memory Transport (原子级内存安全传输结构)**
-   针对大体量并发环境下的运行时时序错位问题，系统创造性地利用底层 Microtask Event Loop (微任务队列) 与独立分配的全局双向隔离区结构，构建了一条具有极高容错性的数据原子化汇聚网络。这体现了构建健壮分布式数据系统的严密学术思维。
-   *Addressing the issue of runtime sequence misalignment under massive concurrency environments, the system creatively utilizes the underlying Microtask Event Loop and independently allocated global bidirectional isolator structures to build an atomically convergent network with extremely high fault tolerance.*
-
----
-
-## 💬 学术研讨与交流 / Contact & Communication
-
-欢迎添加作者微信（微信号：`Sleep_Plan`），进入底层网络协议分析与大模型 AI Agent 自动化技术的专属研讨群进行深度学术交流。
-*Welcome to add the author's WeChat (WeChat ID: `Sleep_Plan`) to join the exclusive discussion group focusing on underlying network protocol analysis and LLM AI Agent automation technologies for deep academic exchange.*
-
-<br>
-
-<p align="center">
-  <img src="wechat.jpg" alt="WeChat / 微信技术交流" width="260">
+  <img src="wechat.jpg" alt="微信技术交流" width="240">
   <br>
-  <b>微信号 / WeChat ID: <code>Sleep_Plan</code></b>
+  <b>作者微信号：<code>Sleep_Plan</code></b>
 </p>
 
 <br>
 
 ---
 
-## 💖 赞助与支持 / Sponsor & Support
+## 💖 赞助与支持
 
-如果本项目对您的学术研究、工程实践或商业探索有所启发与帮助，欢迎请作者喝杯咖啡，支持持续的底层技术研究与协议栈维护！
-*If this project has helped or inspired your academic research, engineering practice, or commercial exploration, consider buying the author a coffee to support continuous low-level protocol research and maintenance!*
+如果这个开源项目帮到了你，或者启发了你的灵感，欢迎请作者喝杯咖啡，支持项目的持续维护与更新！
 
 <br>
 
 <p align="center">
-  <img src="alipay_sponsor.png" alt="支付宝赞助 / Alipay" width="240">
+  <img src="alipay_sponsor.png" alt="支付宝赞助" width="220">
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="wechat_sponsor.png" alt="微信赞助 / WeChat Pay" width="240">
+  <img src="wechat_sponsor.png" alt="微信支付赞助" width="220">
   <br>
-  <b>支付宝 (Alipay) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 微信支付 (WeChat Pay)</b>
+  <b>支付宝赞助 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 微信支付赞助</b>
 </p>
 
 <br>
 
 ---
 
-## 📝 贡献 / Contributing
-欢迎提交 Issues 与 Pull Requests。这是一个供深层数据流技术学术研究交流的开源代码库，请在提交代码时注意遵守免责声明及学术规范。
-*Issues and Pull Requests are welcome. This is an open-source codebase for academic research and exchange on deep data flow technologies. Please ensure compliance with the disclaimer and academic norms.*
+## 📄 许可证与免责声明
 
-## 📄 许可证 / License
-[MIT License](LICENSE) (附加了非商业用途与恶意滥用严格限制条款 / *With strict Non-Commercial and Malicious-Abuse restriction clauses attached*)
-
----
-
-## © 版权说明 / Copyright
+本项目遵循 [MIT License](LICENSE) 开源协议。本代码仅供技术研究与学习交流，请勿用于非法用途。商业化批量稳定采数请联系作者获取企业级方案。
 
 Copyright (c) 2026 markx520. All rights reserved.
-
-本项目源代码及相关文档已受相应保护。除学术研究范围内的开源代码交流及算法研讨外，未经作者明确书面许可，严禁将本项目架构或源代码直接用于任何形式的商业变现、闭源代码封装二次售卖，或进行不符合学术规约的无署名分发。
-*The source code and related documentation of this project are protected. Except for open-source code communication and algorithmic discussion within the scope of academic research, without explicit written permission from the author, any form of commercial monetization, closed-source packaging for secondary sale, or unsigned distribution violating academic conventions is strictly prohibited.*

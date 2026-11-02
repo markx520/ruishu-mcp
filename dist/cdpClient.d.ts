@@ -13,6 +13,13 @@ export declare class RuishuCdpClient {
     private static isRuishuRequest;
     private static stripRuishuParam;
     connect(urlKeyword: string, host: string, port: number): Promise<string>;
+    getSiteDomain(): Promise<string>;
+    getCurrentUrl(): Promise<string>;
+    detectRuishu(): Promise<string>;
+    /**
+     * Navigate to target URL with automated hook injection and Ruishu status check
+     */
+    navigate(url: string, waitTimeoutMs?: number): Promise<string>;
     executeScript(jsScript: string): Promise<string>;
 }
 export declare const cdpClient: RuishuCdpClient;

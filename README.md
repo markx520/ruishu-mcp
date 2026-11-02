@@ -1,7 +1,7 @@
 # 瑞数 MCP (Ruishu MCP)：让 AI 轻松看懂并抓取瑞数高防网站数据
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/markx520/ruishu-mcp)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/markx520/ruishu-mcp)
 [![Anthropic MCP](https://img.shields.io/badge/Anthropic-MCP%20Compliant-blueviolet.svg)](https://modelcontextprotocol.io)
 
 > 💼 **商业合作与定制开发**
@@ -84,13 +84,23 @@ npm run build
 
 ---
 
-## 🛠️ AI 能用到的 3 个核心工具
+## 🛠️ AI 能用到的 5 个标准工具
 
-配置好后，AI 助手会自动拥有以下 3 个标准能力：
+配置好后，AI 助手会自动拥有以下能力，实现全自动无人值守采数：
 
-1. **`init_ruishu_hook`（初始化监控与探针注入）**：指定目标网站的 URL 规则，自动向浏览器环境注入数据监听探针，进入就绪监听状态。
-2. **`execute_page_action`（执行页面动作与交互控制）**：驱动页面执行指定的自动化操作（如模拟点击、表单提交、翻页等），触发目标业务数据的主动流转。
-3. **`get_intercepted_traffic`（获取结构化拦截数据）**：拉取已经过解密还原、参数清洗后的规整业务 JSON 数据集，直接供大模型分析处理。
+1. **`navigate_to`（自动打开网页与挂载）**：直接让 AI 打开指定网址，自动等待页面加载和安全验证完成，并自动注入监听探针。
+2. **`init_ruishu_hook`（初始化已有网页探针）**：对浏览器当前已经打开的标签页注入监听探针，进入就绪监听状态。
+3. **`get_intercepted_traffic`（获取清洗后的业务数据）**：拉取已经过解密还原、剔除乱码后的规整 JSON 数据集。支持 `filter_keyword` 关键词筛选（如只看 `/api/data`），**大幅帮大模型节省 Token**。
+4. **`execute_page_action`（驱动页面操作）**：让 AI 自动在网页里模拟点击、翻页、输入搜索等动作，激发业务数据流转。
+5. **`check_ruishu_status`（检查防护状态）**：快速检查当前页面的防护信号、域名与缓冲区数据量，无需刷新网页。
+
+---
+
+## 📦 MCP 官方原生标准支持 (Resources & Prompts)
+
+- **实时流量资源**：订阅 `ruishu://latest-traffic`，AI 无需反复调工具即可像读文件一样随时查看最新数据流。
+- **状态监测资源**：订阅 `ruishu://page-status`，随时掌握当前页面的防护识别与连接状态。
+- **开箱即用 Prompt 模板**：内置 `ruishu_data_extraction` 规范工作流，在 Claude / Cursor 中一键生成完整端到端采数任务指令。
 
 ---
 

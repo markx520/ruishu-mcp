@@ -214,32 +214,52 @@ export class RuishuCdpClient {
         // Force reload page to make the Document hook effective
         await Page.reload({ ignoreCache: true });
         // Wait for page load completion before automatically detecting Ruishu features
-        // Use configurable timeout instead of hardcoded value, accommodating slow networks
         await new Promise(resolve => setTimeout(resolve, config.pageLoadTimeoutMs));
-        let ruishuDetection = 'Undetected';
+        const ruishuDetection = await this.detectRuishu();
+        const siteDomain = await this.getSiteDomain();
+        return `Universal Ruishu Hook successfully attached! Page reloaded.\nSite Domain: ${siteDomain}\nRuishu Detection: ${ruishuDetection}`;
+    }
+    async getSiteDomain() {
+        if (!this.client || !this.client.Runtime)
+            return '';
+        try {
+            return (await this.client.Runtime.evaluate({ expression: 'location.hostname' }))?.result?.value || '';
+        }
+        catch (e) {
+            return '';
+        }
+    }
+    async getCurrentUrl() {
+        if (!this.client || !this.client.Runtime)
+            return '';
+        try {
+            return (await this.client.Runtime.evaluate({ expression: 'location.href' }))?.result?.value || '';
+        }
+        catch (e) {
+            return '';
+        }
+    }
+    async detectRuishu() {
+        if (!this.client || !this.client.Runtime)
+            return 'Client not connected';
         try {
             const detectScript = `
                 (function() {
                     const result = { isRuishu: false, signals: [] };
-                    // Detection 1: $_ts global variable (visible during challenge page phase)
                     if (window.$_ts) {
                         result.isRuishu = true;
                         result.signals.push('$_ts global variable exists (nsd=' + (window.$_ts.nsd || 'N/A') + ')');
                     }
-                    // Detection 2: <meta r='m'> tag (visible during challenge page phase)
                     const metas = document.querySelectorAll('meta[r="m"]');
                     if (metas.length > 0) {
                         result.isRuishu = true;
                         result.signals.push('Found ' + metas.length + ' meta[r=m] tags');
                     }
-                    // Detection 3: <script r='m'> tag (visible during challenge page phase)
                     const scripts = document.querySelectorAll('script[r="m"]');
                     if (scripts.length > 0) {
                         result.isRuishu = true;
                         result.signals.push('Found ' + scripts.length + ' script[r=m] tags');
                     }
-                    // Detection 4: Cookie features (persistent signals that remain after passing the challenge)
-                    // Ruishu Cookie feature: Key 5-15 random alphanumeric, Value usually 30+ chars long string
                     let ruishuCookieCount = 0;
                     const cookies = document.cookie.split(';');
                     for (const c of cookies) {
@@ -255,11 +275,9 @@ export class RuishuCdpClient {
                             }
                         }
                     }
-                    // 2 or more long-value random-named Cookies -> Highly confident confirmation of Ruishu
                     if (ruishuCookieCount >= 2) {
                         result.isRuishu = true;
                     }
-                    // Detection 5: Check if there are Ruishu requests in the intercepted queue (final fallback)
                     if (!result.isRuishu && window.__mcp_intercept_queue && window.__mcp_intercept_queue.length > 0) {
                         result.isRuishu = true;
                         result.signals.push('Hook queue captured ' + window.__mcp_intercept_queue.length + ' Ruishu traffic entries');
@@ -268,26 +286,47 @@ export class RuishuCdpClient {
                 })();
             `;
             const detectRes = await Promise.race([
-                Runtime.evaluate({ expression: detectScript, returnByValue: true }),
+                this.client.Runtime.evaluate({ expression: detectScript, returnByValue: true }),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('detect timeout')), 5000))
             ]);
             const detection = detectRes?.result?.value;
             if (detection) {
-                ruishuDetection = detection.isRuishu
-                    ? `✅ Confirmed Ruishu protection! Signals: ${detection.signals.join(' | ')}`
-                    : `❌ No Ruishu features detected. Signals: ${detection.signals.length > 0 ? detection.signals.join(' | ') : 'None'}`;
+                return detection.isRuishu
+                    ? `Confirmed Ruishu protection! Signals: ${detection.signals.join(' | ')}`
+                    : `No Ruishu features detected. Signals: ${detection.signals.length > 0 ? detection.signals.join(' | ') : 'None'}`;
             }
+            return 'Detection inconclusive';
         }
         catch (e) {
-            ruishuDetection = 'Detection timeout/failed';
+            return 'Detection timeout/failed';
         }
-        // Get the current page domain for return message display
-        let siteDomain = '';
-        try {
-            siteDomain = (await Runtime.evaluate({ expression: 'location.hostname' }))?.result?.value || '';
+    }
+    /**
+     * Navigate to target URL with automated hook injection and Ruishu status check
+     */
+    async navigate(url, waitTimeoutMs) {
+        if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+            throw new Error(`Invalid URL "${url}": Target URL must start with http:// or https://`);
         }
-        catch (e) { }
-        return `Universal Ruishu Hook successfully attached! Page reloaded.\nSite Domain: ${siteDomain}\nRuishu Detection: ${ruishuDetection}`;
+        // Auto-connect if not already connected
+        if (!this.client) {
+            await this.connect("", config.defaultHost, config.defaultPort);
+        }
+        const { Page } = this.client;
+        // Ensure Hook is mounted before new document creates
+        await Page.addScriptToEvaluateOnNewDocument({
+            source: getUniversalHook()
+        });
+        // Clear queue on navigation to ensure clean state for new page
+        this.nodeInterceptQueue = [];
+        this.pendingResponseCount = 0;
+        await Page.navigate({ url });
+        const waitMs = waitTimeoutMs && waitTimeoutMs > 0 ? waitTimeoutMs : config.pageLoadTimeoutMs;
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+        const siteDomain = await this.getSiteDomain();
+        const finalUrl = await this.getCurrentUrl();
+        const ruishuStatus = await this.detectRuishu();
+        return `Navigated to target URL successfully.\nFinal URL: ${finalUrl}\nSite Domain: ${siteDomain}\nRuishu Detection: ${ruishuStatus}`;
     }
     async executeScript(jsScript) {
         if (!this.client || !this.client.Runtime) {

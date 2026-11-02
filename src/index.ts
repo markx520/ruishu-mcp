@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+    CallToolRequestSchema,
+    ListToolsRequestSchema,
+    ListResourcesRequestSchema,
+    ReadResourceRequestSchema,
+    ListPromptsRequestSchema,
+    GetPromptRequestSchema
+} from "@modelcontextprotocol/sdk/types.js";
 
 import { cdpClient } from "./cdpClient.js";
 import { config } from "./config.js";
@@ -9,11 +16,13 @@ import { config } from "./config.js";
 const server = new Server(
     {
         name: "ruishu-cdp",
-        version: "1.0.0",
+        version: "1.2.0",
     },
     {
         capabilities: {
             tools: {},
+            resources: {},
+            prompts: {},
         },
     }
 );
@@ -53,15 +62,48 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                 }
             },
             {
+                name: "navigate_to",
+                title: "Navigate To URL",
+                description: "Automated Navigation & Monitoring. Directly commands the browser to navigate to a target URL, automatically injects the zero-interference telemetry probe, waits for dynamic challenge verification, and returns the real-time Ruishu protection status.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        url: {
+                            type: "string",
+                            description: "The target website URL (must start with http:// or https://)"
+                        },
+                        wait_timeout_ms: {
+                            type: "number",
+                            description: "Wait timeout in milliseconds for page load and Ruishu challenge resolution (default: 5000)"
+                        }
+                    },
+                    required: ["url"]
+                },
+                annotations: {
+                    title: "Navigate To URL",
+                    readOnlyHint: false,
+                    destructiveHint: false,
+                    openWorldHint: true
+                }
+            },
+            {
                 name: "get_intercepted_traffic",
                 title: "Get Intercepted Traffic",
-                description: "Step 2: Data Observation. Retrieves the merged high-fidelity JSON log datasets processed by the data pipeline. Automatically consumes and clears the atomic memory queue to prevent overflow.",
+                description: "Step 2: Data Observation. Retrieves decrypted and normalized JSON network traffic logs processed by the data pipeline. Supports URL keyword filtering and data type slicing to drastically reduce token usage.",
                 inputSchema: {
                     type: "object",
                     properties: {
                         limit: {
                             type: "number",
                             description: "Number of newest records to retrieve (prevents context explosion), retrieves all if not provided."
+                        },
+                        filter_keyword: {
+                            type: "string",
+                            description: "Filter traffic by URL keyword or path substring (e.g. '/api/query') to save tokens"
+                        },
+                        sub_type: {
+                            type: "string",
+                            description: "Filter by packet category: 'all', 'request', or 'response' (default: 'all')"
                         }
                     }
                 },
@@ -92,9 +134,140 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     destructiveHint: true,
                     openWorldHint: true
                 }
+            },
+            {
+                name: "check_ruishu_status",
+                title: "Check Ruishu Status",
+                description: "Diagnostic Probe. Inspects the current page's active domain, URL, $_ts parameters, and Ruishu Cookie signals without reloading the page.",
+                inputSchema: {
+                    type: "object",
+                    properties: {}
+                },
+                annotations: {
+                    title: "Check Ruishu Status",
+                    readOnlyHint: true,
+                    destructiveHint: false,
+                    openWorldHint: false
+                }
             }
         ],
     };
+});
+
+/**
+ * List available resources (MCP Standard)
+ */
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    return {
+        resources: [
+            {
+                uri: "ruishu://latest-traffic",
+                name: "Latest Decrypted Ruishu Traffic",
+                description: "Real-time queue of decrypted and normalized network traffic intercepted by the probe.",
+                mimeType: "application/json"
+            },
+            {
+                uri: "ruishu://page-status",
+                name: "Active Page & Ruishu Security Status",
+                description: "Current browser page URL, domain, and detected Ruishu dynamic environment signals.",
+                mimeType: "application/json"
+            }
+        ]
+    };
+});
+
+/**
+ * Handle resource reading (MCP Standard)
+ */
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const uri = request.params.uri;
+    if (uri === "ruishu://latest-traffic") {
+        const nodeRecs = [...cdpClient.nodeInterceptQueue];
+        return {
+            contents: [
+                {
+                    uri: uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify(nodeRecs.slice(-50), null, 2)
+                }
+            ]
+        };
+    } else if (uri === "ruishu://page-status") {
+        const domain = await cdpClient.getSiteDomain();
+        const url = await cdpClient.getCurrentUrl();
+        const detection = await cdpClient.detectRuishu();
+        const statusObj = {
+            site_domain: domain,
+            current_url: url,
+            ruishu_detection: detection,
+            buffered_records_count: cdpClient.nodeInterceptQueue.length,
+            timestamp: new Date().toISOString()
+        };
+        return {
+            contents: [
+                {
+                    uri: uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify(statusObj, null, 2)
+                }
+            ]
+        };
+    }
+    throw new Error(`Resource not found: ${uri}`);
+});
+
+/**
+ * List available prompt templates (MCP Standard)
+ */
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+    return {
+        prompts: [
+            {
+                name: "ruishu_data_extraction",
+                description: "Standard end-to-end SOP for extracting data from Ruishu-protected websites.",
+                arguments: [
+                    {
+                        name: "target_url",
+                        description: "The full URL of the Ruishu-protected target page",
+                        required: true
+                    },
+                    {
+                        name: "data_keyword",
+                        description: "Keyword or API path of the desired business data (e.g. 'search', 'query', 'list')",
+                        required: false
+                    }
+                ]
+            }
+        ]
+    };
+});
+
+/**
+ * Get prompt template (MCP Standard)
+ */
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    if (request.params.name === "ruishu_data_extraction") {
+        const targetUrl = String(request.params.arguments?.target_url || "");
+        const dataKw = String(request.params.arguments?.data_keyword || "");
+        return {
+            description: "Ruishu Data Extraction Standard Operational Procedure",
+            messages: [
+                {
+                    role: "user",
+                    content: {
+                        type: "text",
+                        text: `Please help me extract data from the Ruishu-protected website: ${targetUrl}.
+Follow this standard protocol:
+1. Use 'navigate_to' to open the target URL and verify Ruishu protection status.
+2. If necessary, use 'execute_page_action' to trigger search, pagination, or button clicks.
+3. Use 'get_intercepted_traffic' ${dataKw ? `with filter_keyword="${dataKw}"` : ''} to retrieve the clean, decrypted JSON data.
+4. Parse and summarize the business records concisely.`
+                    }
+                }
+            ]
+        };
+    }
+    throw new Error(`Prompt not found: ${request.params.name}`);
 });
 
 /**
@@ -115,14 +288,42 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             }
         }
 
+        case "navigate_to": {
+            const url = String(request.params.arguments?.url || "");
+            const waitMs = request.params.arguments?.wait_timeout_ms ? Number(request.params.arguments.wait_timeout_ms) : undefined;
+            try {
+                const msg = await cdpClient.navigate(url, waitMs);
+                return { content: [{ type: "text", text: msg }] };
+            } catch (e: any) {
+                return { content: [{ type: "text", text: "Error navigating to URL: " + e.message }], isError: true };
+            }
+        }
+
+        case "check_ruishu_status": {
+            try {
+                const domain = await cdpClient.getSiteDomain();
+                const currentUrl = await cdpClient.getCurrentUrl();
+                const ruishuStatus = await cdpClient.detectRuishu();
+                const statusSummary = `Page Domain: ${domain}\nCurrent URL: ${currentUrl}\nRuishu Detection: ${ruishuStatus}\nBuffered Records: ${cdpClient.nodeInterceptQueue.length}`;
+                return { content: [{ type: "text", text: statusSummary }] };
+            } catch (e: any) {
+                return { content: [{ type: "text", text: "Error inspecting page status: " + e.message }], isError: true };
+            }
+        }
+
         case "get_intercepted_traffic": {
             try {
                 const limit = request.params.arguments?.limit 
                     ? Number(request.params.arguments.limit) 
                     : undefined;
+                const filterKw = request.params.arguments?.filter_keyword 
+                    ? String(request.params.arguments.filter_keyword).trim().toLowerCase() 
+                    : "";
+                const subTypeFilter = request.params.arguments?.sub_type 
+                    ? String(request.params.arguments.sub_type).trim().toLowerCase() 
+                    : "all";
                 
-                // Directly pull data from the browser's incognito cache queue, clear it after pulling to prevent overflow
-                // [Fix point]: Added timeout protection to prevent infinite waiting when the page hangs
+                // Pull from browser queue
                 const rawStr = await Promise.race([
                     cdpClient.executeScript("var q=(window.__mcp_intercept_queue||[]).splice(0);q;"),
                     new Promise<string>((_, reject) => setTimeout(() => reject(new Error("Timed out reading browser queue (30s)")), 30000))
@@ -134,16 +335,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                      console.error(`[WARN] Failed to parse browser queue data: ${String(rawStr).substring(0, 200)}`);
                 }
 
-                // Append the data natively intercepted by the backend
-                const nodeRecs = cdpClient.nodeInterceptQueue.splice(0, cdpClient.nodeInterceptQueue.length); // Extract and clear
+                // Append backend intercepted records
+                const nodeRecs = cdpClient.nodeInterceptQueue.splice(0, cdpClient.nodeInterceptQueue.length);
                 recs = recs.concat(nodeRecs);
 
-                // Truncate unifiedly after merging, ensure limit applies to the full dataset
+                // Apply keyword filter
+                if (filterKw) {
+                    recs = recs.filter((item: any) => {
+                        const urlStr = String(item.url || item.rawUrl || "").toLowerCase();
+                        const bodyStr = String(item.body || item.postData || item.data || "").toLowerCase();
+                        return urlStr.includes(filterKw) || bodyStr.includes(filterKw);
+                    });
+                }
+
+                // Apply sub_type filter
+                if (subTypeFilter && subTypeFilter !== "all") {
+                    recs = recs.filter((item: any) => {
+                        const typeStr = String(item.sub_type || "").toLowerCase();
+                        if (subTypeFilter === "request") {
+                            return typeStr.includes("request") || typeStr.includes("open") || typeStr.includes("call");
+                        } else if (subTypeFilter === "response") {
+                            return typeStr.includes("response");
+                        }
+                        return true;
+                    });
+                }
+
+                // Truncate unifiedly after merging & filtering
                 if (limit && limit > 0) {
                      recs = recs.slice(-limit);
                 }
 
-                // Return nicely formatted robust JSON array
                 return { content: [{ type: "text", text: JSON.stringify(recs, null, 2) }] };
             } catch (e: any) {
                 return { content: [{ type: "text", text: "Error reading storage: " + e.message }], isError: true };
@@ -161,7 +383,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         default:
-            // [Fix point]: No longer throw (to prevent unhandled exceptions across different SDK versions), return unified MCP error response
             return { content: [{ type: "text", text: `Unknown tool: ${request.params.name}` }], isError: true };
     }
 });
@@ -187,13 +408,9 @@ main().catch(error => {
 });
 
 // ========================== Graceful Shutdown ==========================
-// Ensure CDP WebSocket connections are properly closed when the process is terminated
-// to prevent dangling listeners on Chrome's debug port.
 async function gracefulShutdown(signal: string) {
     console.error(`\n[${signal}] Shutting down Ruishu MCP server...`);
     try {
-        // cdpClient exposes the internal client via connect(); access it to close
-        // Use a tight timeout to avoid hanging the exit
         await Promise.race([
             (cdpClient as any).client?.close?.(),
             new Promise(resolve => setTimeout(resolve, 2000))
@@ -208,8 +425,6 @@ async function gracefulShutdown(signal: string) {
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-// [Safety]: Global unhandled rejection catcher to prevent silent crashes on Node.js v23+
 process.on('unhandledRejection', (reason, promise) => {
     console.error('[FATAL] Unhandled Promise Rejection:', reason);
-    // Do NOT exit — keep the server alive. The MCP protocol will surface the error.
 });

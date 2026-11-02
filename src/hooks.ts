@@ -62,6 +62,27 @@ export function getUniversalHook(): string {
         // --- Original method reference (for safe serialization) ---
         const _origStringify = JSON.stringify;
 
+        // --- Helper: Safely serialize Request Body (supports String, FormData, URLSearchParams, Object) ---
+        const _parseBody = (b) => {
+            if (!b) return '';
+            if (typeof b === 'string') return b;
+            try {
+                if (typeof FormData !== 'undefined' && b instanceof FormData) {
+                    const entries = {};
+                    b.forEach((val, key) => {
+                        entries[key] = (typeof val === 'string') ? val : ('[File: ' + (val.name || 'binary') + ']');
+                    });
+                    return _origStringify.call(JSON, entries);
+                }
+                if (typeof URLSearchParams !== 'undefined' && b instanceof URLSearchParams) {
+                    return b.toString();
+                }
+                return _origStringify.call(JSON, b);
+            } catch(e) {
+                return '[Complex Body Serialization Failed]';
+            }
+        };
+
         // --- Defense shield: toString evades detection ---
         const originalToString = Function.prototype.toString;
         const hookSignatures = new Map();
@@ -99,11 +120,12 @@ export function getUniversalHook(): string {
             try {
                 // Only mount response interception for Ruishu requests
                 if (this._isRuishu) {
-                    // Record request body (useful for POST)
-                    if (body && typeof body === 'string' && body.length > 2) {
+                    // Record request body (useful for POST, FormData, URLSearchParams)
+                    const parsedBody = _parseBody(body);
+                    if (parsedBody && parsedBody.length > 2) {
                         _pushLog("xhr_request_body", _origStringify.call(JSON, {
                             url: this._cleanReqUrl,
-                            body: body
+                            body: parsedBody
                         }));
                     }
 
@@ -157,10 +179,7 @@ export function getUniversalHook(): string {
                     isRuishu = _isRuishuUrl(capturedUrl);
                     
                     if (isRuishu) {
-                        let reqBody = '';
-                        if (args[1] && args[1].body) {
-                            reqBody = typeof args[1].body === 'string' ? args[1].body : '[non-string body]';
-                        }
+                        const reqBody = args[1] && args[1].body ? _parseBody(args[1].body) : '';
                         _pushLog("fetch_call", _origStringify.call(JSON, {
                             url: _cleanUrl(capturedUrl),
                             body: reqBody
@@ -262,10 +281,11 @@ export function getUniversalHook(): string {
                         else if (prop === 'send') {
                             const upperSendHook = function(body) {
                                 try {
-                                    if (this._plaintextUrl && body && typeof body === 'string' && body.length > 2) {
+                                    const parsedBody = _parseBody(body);
+                                    if (this._plaintextUrl && parsedBody && parsedBody.length > 2) {
                                         _pushLog("xhr_plaintext_send", _origStringify.call(JSON, {
                                             url: this._plaintextUrl,
-                                            body: body,
+                                            body: parsedBody,
                                             headers: this._plaintextHeaders || {}
                                         }));
                                     }

@@ -90,3 +90,5 @@ docs/ruishu-mcp-底层原理分析.md
 docs/ruishu_defense_penetration_layers.md
 docs/GITHUB_RELEASE_RULE.md
 *.drawio
+
+.github/
